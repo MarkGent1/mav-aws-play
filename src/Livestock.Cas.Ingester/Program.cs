@@ -30,7 +30,7 @@ static void ConfigureBuilder(WebApplicationBuilder builder)
     builder.Host.UseSerilog(SerilogLoggingExtensions.AddLogging);
 
     builder.Services.AddHealthChecks();
-    builder.Services.ConfigureEventListener();
+    builder.Services.ConfigureServiceBus();
 }
 
 [ExcludeFromCodeCoverage]

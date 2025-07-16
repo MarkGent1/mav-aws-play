@@ -1,27 +1,27 @@
 ﻿using Amazon.SQS;
 using Amazon.SQS.Model;
+using Livestock.Cas.Infrastructure.Exceptions;
+using Livestock.Cas.Infrastructure.Messaging.Processors;
+using Livestock.Cas.Infrastructure.Messaging.Serializers;
 using Microsoft.Extensions.Hosting;
 
 namespace Livestock.Cas.Infrastructure.Messaging;
 
-public class QueueListener : IHostedService
+public class QueueListener<T>(IAmazonSQS amazonSQS,
+    IMessageProcessor<T> messageProcessor,
+    IServiceBusReceivedMessageSerializer<T> serializer) : IHostedService
 {
-    const string QueueNameShort = "mav-dev-animals";
-
-    private readonly IAmazonSQS _sqsClient;
+    private readonly IMessageProcessor<T> _messageProcessor = messageProcessor;
+    private readonly IAmazonSQS _amazonSQS = amazonSQS;
+    private readonly IServiceBusReceivedMessageSerializer<T> _serializer = serializer;
 
     private Task? _pollingTask;
     private CancellationTokenSource? _cts;
 
-    public QueueListener(IAmazonSQS amazonSQS)
-    {
-        _sqsClient = amazonSQS;
-    }
-
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        _pollingTask = Task.Run(() => PollMessagesAsync(_cts.Token));
+        _pollingTask = Task.Run(() => PollMessagesAsync(_cts.Token), cancellationToken);
         return Task.CompletedTask;
     }
 
@@ -37,7 +37,7 @@ public class QueueListener : IHostedService
 
     private async Task PollMessagesAsync(CancellationToken cancellationToken)
     {
-        var queueUrl = await _sqsClient.GetQueueUrlAsync(QueueNameShort, cancellationToken);
+        var queueUrl = await _amazonSQS.GetQueueUrlAsync(_messageProcessor.QueueName, cancellationToken);
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -48,21 +48,20 @@ public class QueueListener : IHostedService
                     QueueUrl = queueUrl.QueueUrl,
                     MaxNumberOfMessages = 10,
                     WaitTimeSeconds = 20,
-                    AttributeNames = ["All"],
                     MessageAttributeNames = ["All"]
                 };
 
-                var response = await _sqsClient.ReceiveMessageAsync(request, cancellationToken);
+                var response = await _amazonSQS.ReceiveMessageAsync(request, cancellationToken);
 
                 foreach (var message in response.Messages)
                 {
                     await HandleMessageAsync(message, queueUrl.QueueUrl, cancellationToken);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // _telemetryClient.TrackException(ex);
-                // _logger.LogError(ex, "Polling error: {Message}", ex.Message);
+                // "Polling error: {message}"
+
                 await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
             }
         }
@@ -72,27 +71,23 @@ public class QueueListener : IHostedService
     {
         try
         {
-            // var deserializedMessage = _serializer.Deserialize(message);
-            // await _messageProcessor.ProcessMessageAsync(deserializedMessage, cancellationToken);
+            var messageBody = _serializer.Deserialize(message);
 
-            await _sqsClient.DeleteMessageAsync(queueUrl, message.ReceiptHandle, cancellationToken);
+            await _messageProcessor.ProcessMessageAsync(messageBody, cancellationToken);
+
+            await _amazonSQS.DeleteMessageAsync(queueUrl, message.ReceiptHandle, cancellationToken);
         }
-        //catch (RetryableException ex)
-        //{
-        //    _telemetryClient.TrackException(ex);
-        //    _logger.LogError(ex, "RetryableException in queue: {Queue}, messageId: {MessageId}", _messageProcessor.QueueName, message.MessageId);
-        //    // SQS doesn't support abandon — let visibility timeout expire
-        //}
-        //catch (NonRetryableException ex)
-        //{
-        //    _telemetryClient.TrackException(ex);
-        //    _logger.LogError(ex, "NonRetryableException in queue: {Queue}, messageId: {MessageId}", _messageProcessor.QueueName, message.MessageId);
-        //    // Optionally move to a DLQ by configuration
-        //}
-        catch (Exception ex)
+        catch (RetryableException)
         {
-            // _telemetryClient.TrackException(ex);
-            // _logger.LogError(ex, "Unhandled Exception in queue: {Queue}, messageId: {MessageId}", _messageProcessor.QueueName, message.MessageId);
+            // "RetryableException in queue: {queue}, messageId: {messageId}" / "SQS doesn't support abandon so let visibility timeout expire".
+        }
+        catch (NonRetryableException)
+        {
+            // "NonRetryableException in queue: {queue}, messageId: {messageId}" / "Move to a DLQ by configuration".
+        }
+        catch (Exception)
+        {
+            // "Unhandled Exception in queue: {queue}, messageId: {messageId}".
         }
     }
 }

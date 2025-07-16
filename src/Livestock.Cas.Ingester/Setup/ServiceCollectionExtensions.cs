@@ -1,24 +1,46 @@
-﻿using Amazon.SQS;
+﻿using Livestock.Cas.Infrastructure.Contracts.Messages.Animals.V1;
+using Livestock.Cas.Infrastructure.Contracts.Messages.Animals.V1.Serializers;
 using Livestock.Cas.Infrastructure.Messaging;
+using Livestock.Cas.Infrastructure.Messaging.Processors;
+using Livestock.Cas.Infrastructure.Messaging.Processors.Implementations;
+using Livestock.Cas.Infrastructure.Messaging.Serializers;
 using Livestock.Cas.Infrastructure.Security.Setup;
 
 namespace Livestock.Cas.Ingester.Setup;
 
 public static class ServiceCollectionExtensions
 {
-    public static void ConfigureEventListener(this IServiceCollection services)
+    public static void ConfigureServiceBus(this IServiceCollection services)
     {
         // Load certificates into Trust Store - Note must happen before Mongo and Http client connections.
         services.AddCertificates();
 
-        services.AddQueueListenerAsHostedService();
+        services.AddServiceBusReceiverDependencies();
+
+        services.AddQueueListenerAsHostedService<CreateAnimalMessage>();
+
+        services.AddServiceBusReceivedMessageSerializers();
+
+        services.AddServiceBusMessageProcessors();
     }
 
-    private static void AddQueueListenerAsHostedService(this IServiceCollection services)
+    private static void AddQueueListenerAsHostedService<T>(this IServiceCollection services)
     {
-        services.AddAWSService<IAmazonSQS>();
+        services.AddHostedService<QueueListener<T>>()
+            .AddSingleton<QueueListener<T>>();
+    }
 
-        services.AddHostedService<QueueListener>()
-            .AddSingleton<QueueListener>();
+    private static IServiceCollection AddServiceBusReceivedMessageSerializers(this IServiceCollection services)
+    {
+        services.AddSingleton<IServiceBusReceivedMessageSerializer<CreateAnimalMessage>, CreateAnimalMessageSerializer>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddServiceBusMessageProcessors(this IServiceCollection services)
+    {
+        services.AddTransient<IMessageProcessor<CreateAnimalMessage>, CreateAnimalMessageProcessor>();
+
+        return services;
     }
 }

@@ -1,20 +1,21 @@
-﻿using Livestock.Cas.Infrastructure.Messaging;
+﻿using Livestock.Cas.Infrastructure.Contracts.Messages.Animals.V1;
+using Livestock.Cas.Infrastructure.Messaging.Publishers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Livestock.Cas.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AnimalController : ControllerBase
+public class AnimalController(IMessagePublisher<CreateAnimalMessage> messagePublisher) : ControllerBase
 {
+    private readonly IMessagePublisher<CreateAnimalMessage> _messagePublisher = messagePublisher;
+
     [HttpPost]
     [Route("{name}")]
-    public async Task CreateAsync(string name)
+    public async Task CreateAsync(string name, CancellationToken cancellationToken)
     {
-        var messagePublisher = new MessagePublisher();
+        var createAnimalMessage = new CreateAnimalMessage { Cph = "XXXX", Species = name };
 
-        await messagePublisher.SendAsync(name);
-
-        await Task.FromResult(true);
+        await _messagePublisher.PublishAsync(createAnimalMessage, cancellationToken);
     }
 }

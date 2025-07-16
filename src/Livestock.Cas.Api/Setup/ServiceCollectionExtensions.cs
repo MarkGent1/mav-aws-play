@@ -1,4 +1,8 @@
-﻿using Livestock.Cas.Infrastructure.Persistence.Setup;
+﻿using Livestock.Cas.Infrastructure.Contracts.Messages.Animals.V1;
+using Livestock.Cas.Infrastructure.Messaging;
+using Livestock.Cas.Infrastructure.Messaging.Publishers;
+using Livestock.Cas.Infrastructure.Messaging.Publishers.Implementations;
+using Livestock.Cas.Infrastructure.Persistence.Setup;
 using Livestock.Cas.Infrastructure.Security.Setup;
 
 namespace Livestock.Cas.Api.Setup;
@@ -11,5 +15,16 @@ public static class ServiceCollectionExtensions
         services.AddCertificates();
 
         services.AddMongoDb();
+
+        services.AddServiceBusSenderDependencies();
+
+        services.AddServiceBusMessagePublishers();
+    }
+
+    public static IServiceCollection AddServiceBusMessagePublishers(this IServiceCollection services)
+    {
+        services.AddSingleton<IMessagePublisher<CreateAnimalMessage>, CreateAnimalMessagePublisher>();
+
+        return services;
     }
 }

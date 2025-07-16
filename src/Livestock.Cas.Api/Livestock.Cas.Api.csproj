@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Livestock.Cas.Application\Livestock.Cas.Application.csproj" />
     <ProjectReference Include="..\Livestock.Cas.Infrastructure\Livestock.Cas.Infrastructure.csproj" />
   </ItemGroup>
 
