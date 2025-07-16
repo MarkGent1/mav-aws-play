@@ -1,0 +1,13 @@
+services:
+  livestock.cas.api:
+    image: ${DOCKER_REGISTRY-}livestockcasapi
+    build:
+      context: .
+      dockerfile: src/Livestock.Cas.Api/Dockerfile
+
+  livestock.cas.ingester:
+    image: ${DOCKER_REGISTRY-}livestockcasingester
+    build:
+      context: .
+      dockerfile: src/Livestock.Cas.Ingester/Dockerfile
+
