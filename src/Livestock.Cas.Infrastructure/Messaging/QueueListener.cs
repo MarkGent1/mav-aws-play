@@ -71,9 +71,9 @@ public class QueueListener<T>(IAmazonSQS amazonSQS,
     {
         try
         {
-            var messageBody = _serializer.Deserialize(message);
+            var messagePayload = _serializer.Deserialize(message);
 
-            await _messageProcessor.ProcessMessageAsync(messageBody, cancellationToken);
+            await _messageProcessor.ProcessMessageAsync(messagePayload, cancellationToken);
 
             await _amazonSQS.DeleteMessageAsync(queueUrl, message.ReceiptHandle, cancellationToken);
         }

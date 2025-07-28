@@ -8,7 +8,8 @@ public class CreateAnimalMessageSerializer : IServiceBusReceivedMessageSerialize
 {
     public CreateAnimalMessage? Deserialize(Message message)
     {
-        var messageBody = JsonSerializer.Deserialize<CreateAnimalMessage>(message.Body, CreateAnimalMessageSerializerContext.Default.CreateAnimalMessage);
+        var envelope = JsonSerializer.Deserialize<SnsEnvelope>(message.Body);
+        var messageBody = JsonSerializer.Deserialize(envelope!.Message, CreateAnimalMessageSerializerContext.Default.CreateAnimalMessage);
         return messageBody;
     }
 }
