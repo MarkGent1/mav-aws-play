@@ -27,7 +27,7 @@ public static class ServiceCollectionExtensions
     private static void AddQueueListenerAsHostedService<T>(this IServiceCollection services)
     {
         services.AddHostedService<QueueListener<T>>()
-            .AddSingleton<QueueListener<T>>();
+            .AddSingleton<IQueuePoller<T>, QueuePoller<T>>();
     }
 
     private static IServiceCollection AddServiceBusReceivedMessageSerializers(this IServiceCollection services)

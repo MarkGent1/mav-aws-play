@@ -4,10 +4,39 @@ services:
     build:
       context: .
       dockerfile: src/Livestock.Cas.Api/Dockerfile
+    networks:
+      - cas-tenant
 
   livestock.cas.ingester:
     image: ${DOCKER_REGISTRY-}livestockcasingester
     build:
       context: .
       dockerfile: src/Livestock.Cas.Ingester/Dockerfile
+    networks:
+      - cas-tenant
 
+  localstack:
+    container_name: "localstack-emulator"
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"  # Main gateway for all services
+      - "4571:4571"  # Optional: legacy port
+    env_file:
+      - 'compose/aws.env'
+    environment:
+      - SERVICES=sqs,sns,s3
+      - DEBUG=1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=eu-north-1
+    volumes:
+      - "./localstack_data:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
+      #- ./compose:/etc/localstack/init/ready.d
+    networks:
+      - cas-tenant
+
+networks:
+  cas-tenant:
+    driver: bridge
