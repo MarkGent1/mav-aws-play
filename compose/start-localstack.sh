@@ -8,7 +8,7 @@ set -e
 
 echo "Bootstrapping SNS/SQS setup..."
 
-# Create SNS Topic
+# Create SNS Topics
 topic_arn=$(awslocal sns create-topic \
   --name mav-dev-animal-events \
   --output text \
@@ -68,3 +68,6 @@ awslocal sns subscribe \
   --notification-endpoint "$queue_arn"
 
 echo "Subscription complete."
+
+echo "Waiting for SNS to be ready..."
+awslocal sns list-topics

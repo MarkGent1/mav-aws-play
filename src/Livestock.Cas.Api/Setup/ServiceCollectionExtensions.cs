@@ -9,12 +9,14 @@ namespace Livestock.Cas.Api.Setup;
 
 public static class ServiceCollectionExtensions
 {
-    public static void ConfigureApi(this IServiceCollection services)
+    public static void ConfigureApi(this IServiceCollection services, IConfiguration configuration)
     {
         // Load certificates into Trust Store - Note must happen before Mongo and Http client connections.
         services.AddCertificates();
 
         services.AddMongoDb();
+
+        services.AddDefaultAWSOptions(configuration.GetAWSOptions());
 
         services.AddServiceBusSenderDependencies();
 

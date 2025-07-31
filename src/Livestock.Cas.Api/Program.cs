@@ -59,7 +59,7 @@ static void ConfigureBuilder(WebApplicationBuilder builder)
         });
 
     builder.Services.AddHealthChecks();
-    builder.Services.ConfigureApi();
+    builder.Services.ConfigureApi(builder.Configuration);
 }
 
 [ExcludeFromCodeCoverage]

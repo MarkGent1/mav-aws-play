@@ -26,7 +26,7 @@ public class QueuePoller<T>(IServiceScopeFactory scopeFactory,
     public Task StartAsync(CancellationToken cancellationToken)
     {
         using var scope = _scopeFactory.CreateScope();
-        _observer = scope.ServiceProvider.GetRequiredService<IQueuePollerObserver<T>>();
+        _observer = scope.ServiceProvider.GetService<IQueuePollerObserver<T>>();
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
@@ -70,7 +70,16 @@ public class QueuePoller<T>(IServiceScopeFactory scopeFactory,
 
     private async Task PollMessagesAsync(CancellationToken cancellationToken)
     {
-        var queueUrl = await _amazonSQS.GetQueueUrlAsync(_messageProcessor.QueueName, cancellationToken);
+        string queueUrl = "";
+        
+        try
+        {
+            var queueResponse = await _amazonSQS.GetQueueUrlAsync(_messageProcessor.QueueName, cancellationToken);
+            queueUrl = queueResponse.QueueUrl;
+        }
+        catch (Exception ex)
+        {
+        }
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -78,7 +87,7 @@ public class QueuePoller<T>(IServiceScopeFactory scopeFactory,
             {
                 var response = await _amazonSQS.ReceiveMessageAsync(new ReceiveMessageRequest
                 {
-                    QueueUrl = queueUrl.QueueUrl,
+                    QueueUrl = queueUrl,
                     MaxNumberOfMessages = 10,
                     WaitTimeSeconds = 20,
                     MessageAttributeNames = ["All"]
@@ -88,7 +97,7 @@ public class QueuePoller<T>(IServiceScopeFactory scopeFactory,
                 {
                     foreach (var message in response.Messages)
                     {
-                        await HandleMessageAsync(message, queueUrl.QueueUrl, cancellationToken);
+                        await HandleMessageAsync(message, queueUrl, cancellationToken);
                     }
                 }
             }

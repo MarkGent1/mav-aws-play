@@ -26,5 +26,7 @@ public class AppTestFixture : IAsyncDisposable
         }
 
         HttpClient?.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 }

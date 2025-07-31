@@ -40,7 +40,7 @@ public class AppWebApplicationFactory : WebApplicationFactory<Program>
 
         SQSClientMock
             .Setup(x => x.ReceiveMessageAsync(It.IsAny<ReceiveMessageRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ReceiveMessageResponse { HttpStatusCode = System.Net.HttpStatusCode.OK, Messages = new List<Message>() });
+            .ReturnsAsync(new ReceiveMessageResponse { HttpStatusCode = System.Net.HttpStatusCode.OK, Messages = [] });
 
         SQSClientMock
             .Setup(x => x.DeleteMessageAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))

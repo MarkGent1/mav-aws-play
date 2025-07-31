@@ -30,10 +30,10 @@ public class CreateAnimalMessageProcessorTests(AppTestFixture appTestFixture) : 
         // Assert
         SQSMessageUtility.VerifyMessageWasCompleted(_appTestFixture.AppWebApplicationFactory.SQSClientMock);
 
-        var handledMessage = await _observer!.MessageHandled;
-        Assert.Equal(messageId, handledMessage.MessageId);
-        Assert.Equal(cph.ToString(), handledMessage.Payload.Cph);
-        Assert.Equal(species.ToString(), handledMessage.Payload.Species);
+        var (MessageId, Payload) = await _observer!.MessageHandled;
+        Assert.Equal(messageId, MessageId);
+        Assert.Equal(cph.ToString(), Payload.Cph);
+        Assert.Equal(species.ToString(), Payload.Species);
     }
 
     private async Task ExecuteTest(ReceiveMessageResponse receiveMessageResponseArgs)
@@ -43,7 +43,7 @@ public class CreateAnimalMessageProcessorTests(AppTestFixture appTestFixture) : 
         _appTestFixture.AppWebApplicationFactory.SQSClientMock
             .SetupSequence(x => x.ReceiveMessageAsync(It.IsAny<ReceiveMessageRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(receiveMessageResponseArgs)
-            .ReturnsAsync(new ReceiveMessageResponse { HttpStatusCode = System.Net.HttpStatusCode.OK, Messages = new List<Message>() });
+            .ReturnsAsync(new ReceiveMessageResponse { HttpStatusCode = System.Net.HttpStatusCode.OK, Messages = [] });
 
         using var scope = _appTestFixture.AppWebApplicationFactory.Server.Services.CreateAsyncScope();
         var queuePoller = scope.ServiceProvider.GetRequiredService<IQueuePoller<CreateAnimalMessage>>();

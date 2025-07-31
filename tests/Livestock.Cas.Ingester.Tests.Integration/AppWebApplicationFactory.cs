@@ -1,4 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc.Testing;
+﻿using Amazon.SimpleNotificationService;
+using Livestock.Cas.Infrastructure.Contracts.Messages.Animals.V1;
+using Livestock.Cas.Infrastructure.Messaging.Observers;
+using Livestock.Cas.Infrastructure.Messaging.Publishers;
+using Livestock.Cas.Infrastructure.Messaging.Publishers.Implementations;
+using Livestock.Cas.Ingester.Tests.Integration.Helpers;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
@@ -14,6 +20,10 @@ public class AppWebApplicationFactory : WebApplicationFactory<Program>
         builder.ConfigureServices(services =>
         {
             RemoveService<IHealthCheckPublisher>(services);
+
+            services.AddAWSService<IAmazonSimpleNotificationService>();
+            services.AddSingleton<TestObserver<CreateAnimalMessage>>();
+            services.AddScoped<IQueuePollerObserver<CreateAnimalMessage>>(sp => sp.GetRequiredService<TestObserver<CreateAnimalMessage>>());
         });
 
         host = base.CreateHost(builder);

@@ -1,6 +1,6 @@
 ﻿namespace Livestock.Cas.Ingester.Tests.Integration;
 
-public class AppTestFixture : IDisposable
+public class AppTestFixture : IAsyncDisposable
 {
     public readonly HttpClient HttpClient;
     public readonly AppWebApplicationFactory AppWebApplicationFactory;
@@ -11,17 +11,22 @@ public class AppTestFixture : IDisposable
         HttpClient = AppWebApplicationFactory.CreateClient();
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposing)
+        if (AppWebApplicationFactory is not null)
         {
-            AppWebApplicationFactory?.Dispose();
+            try
+            {
+                await AppWebApplicationFactory.DisposeAsync();
+            }
+            catch (TaskCanceledException)
+            {
+                // Swallow cancellation caused by background pollers during shutdown
+            }
         }
+
+        HttpClient?.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 }
