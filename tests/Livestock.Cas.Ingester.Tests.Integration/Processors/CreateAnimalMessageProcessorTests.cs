@@ -1,5 +1,4 @@
 ﻿using Amazon.SimpleNotificationService;
-using Amazon.SimpleNotificationService.Model;
 using Livestock.Cas.Infrastructure.Contracts.Messages.Animals.V1;
 using Livestock.Cas.Ingester.Tests.Integration.Helpers;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,8 +10,7 @@ public class CreateAnimalMessageProcessorTests(AppTestFixture appTestFixture) : 
     private readonly AppTestFixture _appTestFixture = appTestFixture;
     private TestObserver<CreateAnimalMessage>? _observer;
 
-    public string TopicArn => "arn:aws:sns:eu-north-1:000000000000:mav-dev-animal-events";
-    public string TopicName => "mav-dev-animal-events";
+    public const string TopicIdentifier = "mav-dev-animal-events";
 
     [Fact]
     public async Task GivenCreateAnimalMessagePublishedToTopic_WhenReceivedOnTheQueue_ShouldComplete()
@@ -22,18 +20,17 @@ public class CreateAnimalMessageProcessorTests(AppTestFixture appTestFixture) : 
         var species = Guid.NewGuid();
 
         var createAnimalMessage = GetCreateAnimalMessage(cph.ToString(), species.ToString());
-        var messageToPublish = SNSMessageUtility.CreateMessage(TopicArn, createAnimalMessage);
-
+        
         // Act
-        await ExecuteTest(messageToPublish);
+        await ExecuteTest(createAnimalMessage);
 
         // Assert
-        var (MessageId, Payload) = await _observer!.MessageHandled;
+        var (_, Payload) = await _observer!.MessageHandled;
         Assert.Equal(cph.ToString(), Payload.Cph);
         Assert.Equal(species.ToString(), Payload.Species);
     }
 
-    private async Task ExecuteTest(PublishRequest originalMessage)
+    private async Task ExecuteTest(CreateAnimalMessage message)
     {
         using var cts = new CancellationTokenSource();
 
@@ -41,7 +38,14 @@ public class CreateAnimalMessageProcessorTests(AppTestFixture appTestFixture) : 
         var amazonSimpleNotificationService = scope.ServiceProvider.GetRequiredService<IAmazonSimpleNotificationService>();
         _observer = scope.ServiceProvider.GetRequiredService<TestObserver<CreateAnimalMessage>>();
 
-        await amazonSimpleNotificationService.PublishAsync(originalMessage, cts.Token);
+        var allTopics = await amazonSimpleNotificationService.ListTopicsAsync();
+        var topic = allTopics.Topics.FirstOrDefault(x => x.TopicArn.EndsWith(TopicIdentifier, StringComparison.InvariantCultureIgnoreCase));
+
+        if (topic != null)
+        {
+            var publishRequest = SNSMessageUtility.CreateMessage(topic.TopicArn, message);
+            await amazonSimpleNotificationService.PublishAsync(publishRequest, cts.Token);
+        }
 
         await _observer.MessageHandled;
     }

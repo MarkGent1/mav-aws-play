@@ -30,8 +30,6 @@ public class QueuePoller<T>(IServiceScopeFactory scopeFactory,
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        Task.Delay(TimeSpan.FromSeconds(1));
-
         _pollingTask = Task.Run(() => PollMessagesAsync(_cts.Token), cancellationToken);
 
         return Task.CompletedTask;
@@ -66,20 +64,14 @@ public class QueuePoller<T>(IServiceScopeFactory scopeFactory,
                 // Swallow expected task cancellation during disposal
             }
         }
+
+        GC.SuppressFinalize(this);
     }
 
     private async Task PollMessagesAsync(CancellationToken cancellationToken)
     {
-        string queueUrl = "";
-        
-        try
-        {
-            var queueResponse = await _amazonSQS.GetQueueUrlAsync(_messageProcessor.QueueName, cancellationToken);
-            queueUrl = queueResponse.QueueUrl;
-        }
-        catch (Exception ex)
-        {
-        }
+        var queueResponse = await _amazonSQS.GetQueueUrlAsync(_messageProcessor.QueueName, cancellationToken);
+        var queueUrl = queueResponse.QueueUrl;
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -93,7 +85,7 @@ public class QueuePoller<T>(IServiceScopeFactory scopeFactory,
                     MessageAttributeNames = ["All"]
                 }, cancellationToken);
 
-                if (response?.Messages?.Any() == true)
+                if (response?.Messages?.Count > 0)
                 {
                     foreach (var message in response.Messages)
                     {

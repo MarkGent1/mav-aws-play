@@ -9,8 +9,7 @@ public class CreateAnimalMessagePublisher(IAmazonSimpleNotificationService amazo
     private readonly IAmazonSimpleNotificationService _amazonSimpleNotificationService = amazonSimpleNotificationService;
     private readonly IMessageFactory _messageFactory = messageFactory;
 
-    public string TopicArn => "arn:aws:sns:eu-north-1:000000000000:mav-dev-animal-events";
-    public string TopicName => "mav-dev-animal-events";
+    public string TopicIdentifier => "mav-dev-animal-events";
 
     public async Task PublishAsync(CreateAnimalMessage? message, CancellationToken cancellationToken = default)
     {
@@ -18,15 +17,18 @@ public class CreateAnimalMessagePublisher(IAmazonSimpleNotificationService amazo
 
         try
         {
-            var allTopics = await _amazonSimpleNotificationService.ListTopicsAsync();
-            var topic = allTopics.Topics.FirstOrDefault(x => x.TopicArn.EndsWith(TopicName, StringComparison.InvariantCultureIgnoreCase));
+            var allTopics = await _amazonSimpleNotificationService.ListTopicsAsync(cancellationToken);
+            var topic = allTopics.Topics.FirstOrDefault(x => x.TopicArn.EndsWith(TopicIdentifier, StringComparison.InvariantCultureIgnoreCase));
 
-            var publishRequest = _messageFactory.CreateMessage(TopicArn, message);
-            await _amazonSimpleNotificationService.PublishAsync(publishRequest, cancellationToken);
+            if (topic != null)
+            {
+                var publishRequest = _messageFactory.CreateMessage(topic.TopicArn, message);
+                await _amazonSimpleNotificationService.PublishAsync(publishRequest, cancellationToken);
+            }
         }
         catch (Exception ex)
         {
-            throw new PublishFailedException($"Failed to publish event on {TopicArn}.", false, ex);
+            throw new PublishFailedException($"Failed to publish event on {TopicIdentifier}.", false, ex);
         }
     }
 }

@@ -1,50 +1,57 @@
-﻿using Amazon;
-using Amazon.Runtime;
-using Amazon.SimpleNotificationService;
+﻿using Amazon.SimpleNotificationService;
 using Amazon.SQS;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Livestock.Cas.Infrastructure.Messaging;
 
 public static class ServiceBusRegistrations
 {
-    public static IServiceCollection AddServiceBusSenderDependencies(this IServiceCollection services)
+    public static IServiceCollection AddServiceBusSenderDependencies(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddTransient<IMessageFactory, MessageFactory>();
 
-        // services.AddAWSService<IAmazonSimpleNotificationService>();
-
-        services.AddSingleton<IAmazonSimpleNotificationService>(sp =>
+        if (configuration["AWS:OverrideServiceURL"] != null)
         {
-            var config = new AmazonSimpleNotificationServiceConfig
+            services.AddSingleton<IAmazonSimpleNotificationService>(sp =>
             {
-                ServiceURL = "http://localstack:4566",
-                UseHttp = true,
-                AuthenticationRegion = "eu-north-1"
-            };
-
-            return new AmazonSimpleNotificationServiceClient(config);
-        });
-
+                var config = new AmazonSimpleNotificationServiceConfig
+                {
+                    ServiceURL = configuration["AWS:ServiceURL"],
+                    AuthenticationRegion = configuration["AWS:Region"],
+                    UseHttp = true
+                };
+                return new AmazonSimpleNotificationServiceClient(config);
+            });
+        }
+        else
+        {
+            services.AddAWSService<IAmazonSimpleNotificationService>();
+        }
+        
         return services;
     }
 
-    public static IServiceCollection AddServiceBusReceiverDependencies(this IServiceCollection services)
+    public static IServiceCollection AddServiceBusReceiverDependencies(this IServiceCollection services, IConfiguration configuration)
     {
-        // services.AddAWSService<IAmazonSQS>();
-
-        services.AddSingleton<IAmazonSQS>(sp =>
+        if (configuration["AWS:OverrideServiceURL"] != null)
         {
-            var config = new AmazonSQSConfig
+            services.AddSingleton<IAmazonSQS>(sp =>
             {
-                ServiceURL = "http://localhost:4566",
-                UseHttp = true,
-                AuthenticationRegion = "eu-north-1"
-            };
-
-            var credentials = new BasicAWSCredentials("test", "test");
-            return new AmazonSQSClient(credentials, config);
-        });
+                var config = new AmazonSQSConfig
+                {
+                    ServiceURL = configuration["AWS:ServiceURL"],
+                    AuthenticationRegion = configuration["AWS:Region"],
+                    UseHttp = true
+                };
+                var credentials = new Amazon.Runtime.BasicAWSCredentials("test", "test");
+                return new AmazonSQSClient(credentials, config);
+            });
+        }
+        else
+        {
+            services.AddAWSService<IAmazonSQS>();
+        }
 
         return services;
     }

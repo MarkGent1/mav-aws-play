@@ -1,8 +1,6 @@
 ﻿using Amazon.SimpleNotificationService;
 using Livestock.Cas.Infrastructure.Contracts.Messages.Animals.V1;
 using Livestock.Cas.Infrastructure.Messaging.Observers;
-using Livestock.Cas.Infrastructure.Messaging.Publishers;
-using Livestock.Cas.Infrastructure.Messaging.Publishers.Implementations;
 using Livestock.Cas.Ingester.Tests.Integration.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,11 +15,12 @@ public class AppWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override IHost CreateHost(IHostBuilder builder)
     {
+        Environment.SetEnvironmentVariable("AWS__OverrideServiceURL", "Yes");
+        Environment.SetEnvironmentVariable("AWS__ServiceURL", "http://localhost:4566");
+
         builder.ConfigureServices(services =>
         {
             RemoveService<IHealthCheckPublisher>(services);
-
-            // services.AddAWSService<IAmazonSimpleNotificationService>();
 
             services.AddSingleton<IAmazonSimpleNotificationService>(sp =>
             {
@@ -31,7 +30,6 @@ public class AppWebApplicationFactory : WebApplicationFactory<Program>
                     UseHttp = true,
                     AuthenticationRegion = "eu-north-1"
                 };
-
                 return new AmazonSimpleNotificationServiceClient(config);
             });
 

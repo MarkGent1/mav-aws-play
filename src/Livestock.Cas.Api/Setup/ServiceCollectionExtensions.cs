@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
 
         services.AddDefaultAWSOptions(configuration.GetAWSOptions());
 
-        services.AddServiceBusSenderDependencies();
+        services.AddServiceBusSenderDependencies(configuration);
 
         services.AddServiceBusMessagePublishers();
     }

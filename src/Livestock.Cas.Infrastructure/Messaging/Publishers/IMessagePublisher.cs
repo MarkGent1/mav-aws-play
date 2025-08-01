@@ -2,7 +2,7 @@
 
 public interface IMessagePublisher<in T>
 {
-    string TopicArn { get; }
+    string TopicIdentifier { get; }
 
     Task PublishAsync(T? message, CancellationToken cancellationToken = default);
 }

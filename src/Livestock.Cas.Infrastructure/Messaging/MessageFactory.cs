@@ -24,8 +24,6 @@ public class MessageFactory : IMessageFactory
             topicArn,
             SerializeToJson(body),
             subject ?? messageType,
-            messageGroupId ?? messageType,
-            messageDeduplicationId ?? Guid.NewGuid(),
             additionalUserProperties);
     }
 
@@ -33,16 +31,12 @@ public class MessageFactory : IMessageFactory
         string topicArn,
         string body,
         string subject,
-        string messageGroupId,
-        Guid messageDeduplicationId,
         Dictionary<string, string>? additionalUserProperties)
     {
         var dateTime = DateTime.UtcNow;
 
         var message = new PublishRequest(topicArn, body, subject)
         {
-            MessageGroupId = messageGroupId,
-            MessageDeduplicationId = messageDeduplicationId.ToString(),
             MessageAttributes = []
         };
 
@@ -50,11 +44,6 @@ public class MessageFactory : IMessageFactory
         {
             DataType = "String",
             StringValue = dateTime.ToString()
-        });
-        message.MessageAttributes.Add(EventId, new MessageAttributeValue
-        {
-            DataType = "String",
-            StringValue = messageDeduplicationId.ToString("N")
         });
 
         if (additionalUserProperties == null || additionalUserProperties.Count == 0)
