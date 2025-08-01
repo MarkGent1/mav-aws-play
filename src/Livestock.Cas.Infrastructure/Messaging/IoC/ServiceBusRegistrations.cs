@@ -37,7 +37,7 @@ public static class ServiceBusRegistrations
         {
             var config = new AmazonSQSConfig
             {
-                ServiceURL = "http://localstack:4566",
+                ServiceURL = "http://localhost:4566",
                 UseHttp = true,
                 AuthenticationRegion = "eu-north-1"
             };

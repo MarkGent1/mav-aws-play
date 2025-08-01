@@ -11,25 +11,24 @@ public class CreateAnimalMessageProcessorTests(AppTestFixture appTestFixture) : 
     private readonly AppTestFixture _appTestFixture = appTestFixture;
     private TestObserver<CreateAnimalMessage>? _observer;
 
-    private const string TopicArn = "arn:aws:sns:eu-north-1:000000000000:mav-dev-animal-events";
+    public string TopicArn => "arn:aws:sns:eu-north-1:000000000000:mav-dev-animal-events";
+    public string TopicName => "mav-dev-animal-events";
 
     [Fact]
     public async Task GivenCreateAnimalMessagePublishedToTopic_WhenReceivedOnTheQueue_ShouldComplete()
     {
         // Arrange
-        var messageId = Guid.NewGuid();
         var cph = Guid.NewGuid();
         var species = Guid.NewGuid();
 
         var createAnimalMessage = GetCreateAnimalMessage(cph.ToString(), species.ToString());
-        var messageToPublish = SNSMessageUtility.CreateMessage(TopicArn, messageId, createAnimalMessage);
+        var messageToPublish = SNSMessageUtility.CreateMessage(TopicArn, createAnimalMessage);
 
         // Act
         await ExecuteTest(messageToPublish);
 
         // Assert
         var (MessageId, Payload) = await _observer!.MessageHandled;
-        Assert.Equal(messageId.ToString(), MessageId);
         Assert.Equal(cph.ToString(), Payload.Cph);
         Assert.Equal(species.ToString(), Payload.Species);
     }

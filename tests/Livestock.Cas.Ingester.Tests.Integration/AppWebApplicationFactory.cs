@@ -21,7 +21,20 @@ public class AppWebApplicationFactory : WebApplicationFactory<Program>
         {
             RemoveService<IHealthCheckPublisher>(services);
 
-            services.AddAWSService<IAmazonSimpleNotificationService>();
+            // services.AddAWSService<IAmazonSimpleNotificationService>();
+
+            services.AddSingleton<IAmazonSimpleNotificationService>(sp =>
+            {
+                var config = new AmazonSimpleNotificationServiceConfig
+                {
+                    ServiceURL = "http://localhost:4566",
+                    UseHttp = true,
+                    AuthenticationRegion = "eu-north-1"
+                };
+
+                return new AmazonSimpleNotificationServiceClient(config);
+            });
+
             services.AddSingleton<TestObserver<CreateAnimalMessage>>();
             services.AddScoped<IQueuePollerObserver<CreateAnimalMessage>>(sp => sp.GetRequiredService<TestObserver<CreateAnimalMessage>>());
         });
