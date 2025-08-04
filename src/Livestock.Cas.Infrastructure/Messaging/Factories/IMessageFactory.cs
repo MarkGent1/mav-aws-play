@@ -1,6 +1,6 @@
 ﻿using Amazon.SimpleNotificationService.Model;
 
-namespace Livestock.Cas.Infrastructure.Messaging;
+namespace Livestock.Cas.Infrastructure.Messaging.Factories;
 
 public interface IMessageFactory
 {

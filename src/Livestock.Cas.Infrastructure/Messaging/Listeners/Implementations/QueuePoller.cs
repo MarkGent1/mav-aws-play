@@ -6,7 +6,7 @@ using Livestock.Cas.Infrastructure.Messaging.Processors;
 using Livestock.Cas.Infrastructure.Messaging.Serializers;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Livestock.Cas.Infrastructure.Messaging;
+namespace Livestock.Cas.Infrastructure.Messaging.Listeners.Implementations;
 
 public class QueuePoller<T>(IServiceScopeFactory scopeFactory,
     IAmazonSQS amazonSQS,

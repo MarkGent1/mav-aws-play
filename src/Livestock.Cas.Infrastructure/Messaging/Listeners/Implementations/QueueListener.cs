@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 
-namespace Livestock.Cas.Infrastructure.Messaging;
+namespace Livestock.Cas.Infrastructure.Messaging.Listeners.Implementations;
 
 public class QueueListener<T>(IQueuePoller<T> queuePoller) : IHostedService
 {

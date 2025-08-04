@@ -26,7 +26,12 @@ public class SQSMessageUtility
         var messageSerialized = JsonSerializer.Serialize(message, JsonDefaults.DefaultOptionsWithStringEnumConversion);
         var snsEnvelope = new SnsEnvelope { Message = messageSerialized, MessageId = messageId };
         var snsEnvelopeSerialized = JsonSerializer.Serialize(snsEnvelope, JsonDefaults.PropertyNamingPolicyAndWriteIndented);
-        var serviceBusMessage = new Message { MessageId = messageId, ReceiptHandle = messageId, Body = snsEnvelopeSerialized };
+        var serviceBusMessage = new Message { MessageId = messageId, ReceiptHandle = messageId, Body = snsEnvelopeSerialized, MessageAttributes = [] };
+        serviceBusMessage.MessageAttributes.TryAdd("Subject", new MessageAttributeValue
+        {
+            DataType = "String",
+            StringValue = typeof(TMessage).Name.Replace("Message", string.Empty)
+        });
         return serviceBusMessage;
     }
 

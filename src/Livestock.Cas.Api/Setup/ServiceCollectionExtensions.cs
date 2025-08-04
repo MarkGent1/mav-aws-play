@@ -1,5 +1,5 @@
 ﻿using Livestock.Cas.Infrastructure.Contracts.Messages.Animals.V1;
-using Livestock.Cas.Infrastructure.Messaging;
+using Livestock.Cas.Infrastructure.Messaging.Ioc;
 using Livestock.Cas.Infrastructure.Messaging.Publishers;
 using Livestock.Cas.Infrastructure.Messaging.Publishers.Implementations;
 using Livestock.Cas.Infrastructure.Persistence.Setup;

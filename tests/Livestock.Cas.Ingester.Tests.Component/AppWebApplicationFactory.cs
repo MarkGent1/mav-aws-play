@@ -1,5 +1,6 @@
 ﻿using Amazon.SQS;
 using Amazon.SQS.Model;
+using Livestock.Cas.Infrastructure.Contracts.Messages;
 using Livestock.Cas.Infrastructure.Contracts.Messages.Animals.V1;
 using Livestock.Cas.Infrastructure.Messaging.Observers;
 using Livestock.Cas.Ingester.Tests.Component.Helpers;
@@ -50,6 +51,9 @@ public class AppWebApplicationFactory : WebApplicationFactory<Program>
 
         services.AddSingleton<TestObserver<CreateAnimalMessage>>();
         services.AddScoped<IQueuePollerObserver<CreateAnimalMessage>>(sp => sp.GetRequiredService<TestObserver<CreateAnimalMessage>>());
+
+        services.AddSingleton<TestObserver<MessageType>>();
+        services.AddScoped<IQueuePollerObserver<MessageType>>(sp => sp.GetRequiredService<TestObserver<MessageType>>());
     }
 
     private static void RemoveService<T>(IServiceCollection services)

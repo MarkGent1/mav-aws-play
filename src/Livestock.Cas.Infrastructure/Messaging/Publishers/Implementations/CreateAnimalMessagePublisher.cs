@@ -1,5 +1,6 @@
 ﻿using Amazon.SimpleNotificationService;
 using Livestock.Cas.Infrastructure.Contracts.Messages.Animals.V1;
+using Livestock.Cas.Infrastructure.Messaging.Factories;
 
 namespace Livestock.Cas.Infrastructure.Messaging.Publishers.Implementations;
 

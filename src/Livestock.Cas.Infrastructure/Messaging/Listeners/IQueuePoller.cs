@@ -1,4 +1,4 @@
-﻿namespace Livestock.Cas.Infrastructure.Messaging;
+﻿namespace Livestock.Cas.Infrastructure.Messaging.Listeners;
 
 public interface IQueuePoller<T>
 {

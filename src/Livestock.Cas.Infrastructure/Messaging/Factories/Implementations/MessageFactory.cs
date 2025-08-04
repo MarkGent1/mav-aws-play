@@ -3,7 +3,7 @@ using Livestock.Cas.Infrastructure.Contracts.Messages.Animals.V1;
 using Livestock.Cas.Infrastructure.Contracts.Messages.Animals.V1.Serializers;
 using System.Text.Json;
 
-namespace Livestock.Cas.Infrastructure.Messaging;
+namespace Livestock.Cas.Infrastructure.Messaging.Factories.Implementations;
 
 public class MessageFactory : IMessageFactory
 {

@@ -1,9 +1,12 @@
 ﻿using Amazon.SimpleNotificationService;
 using Amazon.SQS;
+using Livestock.Cas.Infrastructure.Messaging.Configuration;
+using Livestock.Cas.Infrastructure.Messaging.Factories;
+using Livestock.Cas.Infrastructure.Messaging.Factories.Implementations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Livestock.Cas.Infrastructure.Messaging;
+namespace Livestock.Cas.Infrastructure.Messaging.Ioc;
 
 public static class ServiceBusRegistrations
 {
@@ -34,6 +37,8 @@ public static class ServiceBusRegistrations
 
     public static IServiceCollection AddServiceBusReceiverDependencies(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddSingleton(new ServiceBusReceiverConfiguration { QueueName = configuration.GetValue<string>("MultiTypeQueueName") ?? string.Empty });
+
         if (configuration["AWS:OverrideServiceURL"] != null)
         {
             services.AddSingleton<IAmazonSQS>(sp =>

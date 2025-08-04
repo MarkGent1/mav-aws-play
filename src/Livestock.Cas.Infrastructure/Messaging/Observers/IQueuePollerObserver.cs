@@ -1,5 +1,4 @@
 ﻿using Amazon.SQS.Model;
-
 namespace Livestock.Cas.Infrastructure.Messaging.Observers;
 
 public interface IQueuePollerObserver<T>
